@@ -26,6 +26,8 @@ logs/*
 #########
 # server
 #########
+dist-server
+dist-server/*
 
 #########
 # dir
