@@ -129,6 +129,7 @@ Server는 / 로 들어오는 요청을 `/api` 로 바꿔준다.
 
     server {
     	listen 80;
+    	server_name localhost;
 
     	# 로그 파일을 저장하는 부분
     	access_log /var/log/nginx/access.log;
@@ -171,28 +172,28 @@ version: '3.4'
 
 services:
     nginx:
-        restart: always
+        container_name: nginx
         build:
             dockerfile: Dockerfile
             context: ./nginx
         ports:
-            - '8080:80'
+            - '80:80'
         volumes:
-            - ./Nginx/logs:/var/log/nginx
-        networks:
-            - backend
+            - ./nginx/logs:/var/log/nginx
+        restart: unless-stopped
 
     mongo:
         container_name: mongo
         image: mongo
+        ports:
+            - '${MONGO_PORT}:27017'
         volumes:
             - data:/data/db
-        ports:
-            - '27017:27017'
-        networks:
-            - backend
+        env_file:
+            - .env
 
     client:
+        container_name: client
         build:
             dockerfile: Dockerfile
             context: ./client
@@ -203,10 +204,9 @@ services:
             - /usr/app/node_modules
         env_file:
             - .env
-        networks:
-            - backend
 
     server:
+        container_name: server
         build:
             dockerfile: Dockerfile
             context: ./server
@@ -217,8 +217,6 @@ services:
             - /usr/app/node_modules
         env_file:
             - .env
-        networks:
-            - backend
         depends_on:
             - mongo
             - redis
@@ -233,10 +231,6 @@ services:
         ports:
             - '6379:6379'
         restart: always
-
-networks:
-    backend:
-        driver: bridge
 
 volumes:
     data:
